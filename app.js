@@ -31,9 +31,9 @@ function handleFile(base64Str) {
 // POST route: /bfhl
 app.post('/bfhl', (req, res) => {
   const { data, file_b64 } = req.body;
-  const userId = 'john_doe_17091999'; // Hardcoded user_id
-  const email = 'john@xyz.com'; // Hardcoded email
-  const rollNumber = 'ABCD123'; // Hardcoded roll number
+  const userId = 'Suyashsoni_12032002'; // Hardcoded user_id
+  const email = 'ss9333@srmist.edu.in'; // Hardcoded email
+  const rollNumber = 'RA2111003030301'; // Hardcoded roll number
 
   // Input validation
   if (!data || !Array.isArray(data)) {
