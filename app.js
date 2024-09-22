@@ -1,55 +1,82 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const app = express();
+const atob = require('atob'); // Decoding Base64 strings
+const mime = require('mime-types'); // To detect MIME types
 const PORT = process.env.PORT || 5000;
 
-app.use(bodyParser.json());
+// Middleware to parse JSON bodies
+app.use(express.json());
 
-// Helper function to check file validity (Base64)
-function isValidBase64(base64String) {
-  const regex = /^data:([A-Za-z-+\/]+);base64,(.+)$/;
-  return regex.test(base64String);
+// Helper to decode Base64 string and get file details
+function handleFile(base64Str) {
+  if (!base64Str) {
+    return { file_valid: false };
+  }
+
+  try {
+    const buffer = Buffer.from(base64Str, 'base64');
+    const mimeType = mime.lookup(buffer);
+    const fileSizeKb = Math.ceil(buffer.length / 1024); // Convert size to KB
+
+    return {
+      file_valid: true,
+      file_mime_type: mimeType,
+      file_size_kb: fileSizeKb
+    };
+  } catch (error) {
+    return { file_valid: false };
+  }
 }
 
-// POST request to /bfhl
+// POST route: /bfhl
 app.post('/bfhl', (req, res) => {
   const { data, file_b64 } = req.body;
+  const userId = 'john_doe_17091999'; // Hardcoded user_id
+  const email = 'john@xyz.com'; // Hardcoded email
+  const rollNumber = 'ABCD123'; // Hardcoded roll number
 
-  // Process input data to separate numbers and alphabets
+  // Input validation
+  if (!data || !Array.isArray(data)) {
+    return res.status(400).json({ is_success: false, message: 'Invalid data format.' });
+  }
+
+  // Separate numbers and alphabets from data array
   const numbers = data.filter(item => !isNaN(item));
-  const alphabets = data.filter(item => isNaN(item));
-  const lowercaseAlphabets = alphabets.filter(char => char === char.toLowerCase());
+  const alphabets = data.filter(item => isNaN(item) && /^[A-Za-z]+$/.test(item));
 
-  const highestLowercaseAlphabet = lowercaseAlphabets.length > 0 
-    ? [lowercaseAlphabets.sort().reverse()[0]] : [];
+  // Find the highest lowercase alphabet
+  const lowercaseAlphabets = alphabets.filter(item => /^[a-z]+$/.test(item));
+  const highestLowercaseAlphabet = lowercaseAlphabets.length > 0
+    ? [lowercaseAlphabets.sort().pop()] // Get the highest alphabet
+    : [];
 
-  // File handling
-  const fileValid = file_b64 ? isValidBase64(file_b64) : false;
-  const fileMimeType = fileValid ? file_b64.split(';')[0].split(':')[1] : null;
-  const fileSizeKB = fileValid ? (Buffer.from(file_b64.split(',')[1], 'base64').length / 1024).toFixed(2) : null;
+  // Handle file if provided
+  const { file_valid, file_mime_type, file_size_kb } = handleFile(file_b64);
 
-  res.json({
+  // Build the response
+  const response = {
     is_success: true,
-    user_id: "Suyash_Soni_12032002",  // Replace with your logic for user ID
-    email: "ss9333@srmist.edu.in",         // Replace with user email
-    roll_number: "RA2111003030301",        // Replace with roll number
+    user_id: userId,
+    email,
+    roll_number: rollNumber,
     numbers,
     alphabets,
     highest_lowercase_alphabet: highestLowercaseAlphabet,
-    file_valid: fileValid,
-    file_mime_type: fileMimeType,
-    file_size_kb: fileSizeKB,
-  });
+    file_valid,
+    file_mime_type,
+    file_size_kb
+  };
+
+  // Send response
+  res.json(response);
 });
 
-// GET request to /bfhl
+// GET route: /bfhl
 app.get('/bfhl', (req, res) => {
-  res.status(200).json({
-    operation_code: 1
-  });
+  res.status(200).json({ operation_code: 1 });
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
