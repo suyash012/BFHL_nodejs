@@ -1,8 +1,12 @@
 const express = require('express');
+const cors = require('cors'); // Import cors package
 const app = express();
 const atob = require('atob'); // Decoding Base64 strings
 const mime = require('mime-types'); // To detect MIME types
 const PORT = process.env.PORT || 5000;
+
+// Enable CORS for all routes
+app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(express.json());
